@@ -7,14 +7,8 @@ interface Item {
   packed: boolean;
 }
 
-const initialItems: Item[] = [
-  { id: 1, description: "Passports", quantity: 2, packed: false },
-  { id: 2, description: "Socks", quantity: 12, packed: false },
-  { id: 3, description: "Chargher", quantity: 1, packed: true },
-];
-
 interface ItemProps {
-  // id: number;
+  id: number;
   description: string;
   quantity: number;
   packed: boolean;
@@ -27,12 +21,28 @@ export default function App() {
     setItems((items) => [...items, newItem]);
   }
 
+  function deleteItem(id: number) {
+    setItems((items) => items.filter((item) => item.id !== id));
+  }
+
+  function changePackedItem(id: number) {
+    setItems((items) =>
+      items.map((item) =>
+        item.id === id ? { ...item, packed: !item.packed } : item
+      )
+    );
+  }
+
   return (
     <div className="app">
       <Logo />
       <Form onAddItem={addItem} />
-      <Packlist items={items} />
-      <Stats />
+      <Packlist
+        items={items}
+        onDelete={deleteItem}
+        onPacked={changePackedItem}
+      />
+      <Stats items={items} />
     </div>
   );
 }
@@ -87,39 +97,84 @@ function Form({ onAddItem }: { onAddItem: (item: Item) => void }) {
   );
 }
 
-function ItemInlist(props: ItemProps) {
-  return (
-    <li>
-      <span style={props.packed ? { textDecoration: "line-through" } : {}}>
-        {props.description}
-      </span>
-      -<span>{props.quantity}</span>
-      <button>❌</button>
-    </li>
-  );
-}
-
-function Packlist({ items }: { items: Item[] }) {
+function Packlist({
+  items,
+  onDelete,
+  onPacked,
+}: { items: Item[] } & { onDelete: (id: number) => void } & {
+  onPacked: (id: number) => void;
+}) {
   return (
     <div className="list">
       <ul>
         {items.map((item) => (
           <ItemInlist
             key={item.id}
+            id={item.id}
+            onDelete={onDelete}
+            onPacked={onPacked}
             description={item.description}
             quantity={item.quantity}
             packed={item.packed}
           />
         ))}
       </ul>
+      {/* <select name="" id="">
+        <option value=""></option>
+        <option value=""></option>
+        <option value=""></option>
+      </select> */}
     </div>
   );
 }
 
-function Stats() {
+function ItemInlist({
+  id,
+  description,
+  quantity,
+  packed,
+  onDelete,
+  onPacked,
+}: ItemProps & { onDelete: (id: number) => void } & {
+  onPacked: (id: number) => void;
+}) {
+  return (
+    <li>
+      <input
+        type="checkbox"
+        name=""
+        id=""
+        value={String(packed)}
+        onChange={() => onPacked(id)}
+      />
+      <span style={packed ? { textDecoration: "line-through" } : {}}>
+        {description}
+      </span>
+      -<span>{quantity}</span>
+      <button onClick={() => onDelete(id)}>❌</button>
+    </li>
+  );
+}
+
+function Stats({ items }: { items: Item[] }) {
+  if (!items.length) {
+    return <p className="stats">you didn't packed yet let's start 😡</p>;
+  }
+  const itemsNumber: number = items.length;
+  const packedItems: number = items.filter((item) =>
+    item.packed ? item : ""
+  ).length;
+
+  const persents: number = (100 / itemsNumber) * packedItems;
+
   return (
     <footer className="stats">
-      💼 you have X items and you packed only X (X%)
+      <em>
+        {persents === 100
+          ? "you are the best let's fly ✈️"
+          : `💼 you have ${itemsNumber} items and you packed only ${packedItems}
+      ${"(" + Math.floor(persents) + "%)"}`}
+      </em>
     </footer>
   );
 }
