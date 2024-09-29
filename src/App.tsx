@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 
 interface Item {
   id: number;
@@ -21,11 +21,17 @@ interface ItemProps {
 }
 
 export default function App() {
+  const [items, setItems] = useState<Item[]>([]);
+
+  function addItem(newItem: Item) {
+    setItems((items) => [...items, newItem]);
+  }
+
   return (
     <div className="app">
       <Logo />
-      <Form />
-      <Packlist />
+      <Form onAddItem={addItem} />
+      <Packlist items={items} />
       <Stats />
     </div>
   );
@@ -35,7 +41,7 @@ function Logo() {
   return <h1>🧳 Travel list</h1>;
 }
 
-function Form() {
+function Form({ onAddItem }: { onAddItem: (item: Item) => void }) {
   const [description, setDescription] = useState("");
   const [quantity, setQuantity] = useState(1);
 
@@ -44,12 +50,15 @@ function Form() {
     if (!description) return;
 
     const newItem: Item = {
-      id: 3,
+      id: Date.now(),
       description: description,
       quantity: quantity,
       packed: false,
     };
     console.log(newItem);
+    onAddItem(newItem);
+
+    // Reset form fields
     setDescription("");
     setQuantity(1);
   }
@@ -90,11 +99,11 @@ function ItemInlist(props: ItemProps) {
   );
 }
 
-function Packlist() {
+function Packlist({ items }: { items: Item[] }) {
   return (
     <div className="list">
       <ul>
-        {initialItems.map((item) => (
+        {items.map((item) => (
           <ItemInlist
             key={item.id}
             description={item.description}
